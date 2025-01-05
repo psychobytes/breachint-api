@@ -1,5 +1,8 @@
 # venv
-breachint-venv/
+breachint-env/
+
+# config files
+config.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

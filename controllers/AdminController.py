@@ -5,6 +5,9 @@ from flask_jwt_extended import create_access_token
 from datetime import timedelta
 from models.AdminModel import Admin
 
+from flask_jwt_extended import jwt_required, get_jwt
+from functools import wraps
+
 # fungsi untuk hash password
 def hash_password(password):
     salt = bcrypt.gensalt()
@@ -14,6 +17,18 @@ def hash_password(password):
 # fungsi untuk verifikasi password
 def check_password_hash(hashed_password, user_password):
     return bcrypt.checkpw(user_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+def admin_required(fn):
+    @wraps(fn)  # Preserve the original function's name and docstring
+    @jwt_required()
+    def wrapper(*args, **kwargs):
+        claims = get_jwt()
+        if 'role' not in claims:
+            return jsonify({"msg": "Admin access required"}), 403
+        if claims['role'] != 'administrator':
+            return jsonify({"msg": "Admin access required"}), 403
+        return fn(*args, **kwargs)
+    return wrapper
 
 # jwt login
 def login():
@@ -25,7 +40,9 @@ def login():
     if not admin or not check_password_hash(admin.password, password):
         return jsonify({'message': 'Invalid username or password'}), 401
     
-    access_token = create_access_token(identity=admin.username, expires_delta=timedelta(hours=1))
+    additional_claims = {"role": admin.role}
+
+    access_token = create_access_token(identity=admin.username, additional_claims=additional_claims, expires_delta=timedelta(hours=1))
     return jsonify({'access_token': access_token})
 
 def add_admin():
@@ -39,6 +56,7 @@ def add_admin():
     db.session.commit()
     return jsonify({'message': 'Admin added successfully!', 'admin': new_admin.to_dict()}), 201
 
+@admin_required
 def get_admins():
     admins = Admin.query.all()
     admin_data = []
@@ -46,7 +64,8 @@ def get_admins():
         admin_data.append({
             'id':admin.id,
             'username':admin.username,
-            'password':admin.password
+            'password':admin.password,
+            'role':admin.role
         })
     response = {
         'status': 'success',

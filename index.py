@@ -1,15 +1,15 @@
 from config import app, db
 from routes.User_bp import user_bp
 from routes.Admin_bp import admin_bp
+from routes.Breachint_bp import breachint_bp
 from flask import request, jsonify
-from models.AdminModel import Admin
-from controllers.AdminController import check_password_hash
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 
 jwt = JWTManager(app)
 
 app.register_blueprint(user_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(breachint_bp)
 
 @app.route("/")
 def home():
@@ -18,7 +18,7 @@ def home():
 @app.before_request
 def before_request():
     # daftar endpoint yang dikecualikan dari auth
-    excluded_routes = ['/admin/login', '/admin/register']
+    excluded_routes = ['/admin/login', '/admin/register', '/user/login', '/user/register']
     if request.path in excluded_routes:
         return None # skip auth
     

@@ -46,6 +46,7 @@ def get_users():
         user_data.append({
             'id':user.id,
             'username':user.username,
+            'email':user.email,
             'password':user.password
         })
     response = {
@@ -80,10 +81,11 @@ def get_user(user_id):
 @admin_required
 def add_user():
     new_user_data = request.get_json()
+    hashed_pw = hash_password(new_user_data['password'])
     new_user = User(
         username=new_user_data['username'],
         email=new_user_data['email'],
-        password=new_user_data['password']
+        password=hashed_pw
     )
     db.session.add(new_user)
     db.session.commit()
@@ -95,9 +97,10 @@ def update_user(user_id):
     if not user:
         return jsonify({'error': 'User not found'}), 404
     updated_data = request.get_json()
-    user.username = updated_data.get('title', user.username)
-    user.email= updated_data.get('author', user.email)
-    user.password = updated_data.get('year', user.password)
+    hashed_pw = hash_password(updated_data.get('password'))
+    user.username = updated_data.get('username', user.username)
+    user.email= updated_data.get('email', user.email)
+    user.password = hashed_pw
 
     db.session.commit()
     return jsonify({'message': 'User updated successfully!', 'user': user.to_dict()})

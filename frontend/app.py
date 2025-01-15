@@ -20,8 +20,6 @@ def login():
         'password': password
     })
 
-    print(response)
-
     if response.status_code == 200:
         data = response.json()
         access_token = data.get('access_token')
@@ -72,7 +70,6 @@ def update_user(user_id):
 
     headers = {'Authorization': f"Bearer {session['access_token']}"}
     response = requests.put(f'http://127.0.0.1:5000/admin/users/{user_id}', json=data, headers=headers)
-    print(response.text)
     return response.text, response.status_code
 
 @app.route('/admin/<int:user_id>', methods=['DELETE'])
@@ -80,6 +77,12 @@ def delete_user(user_id):
     headers = {'Authorization': f"Bearer {session['access_token']}"}
     response = requests.delete(f'http://127.0.0.1:5000/admin/users/{user_id}', headers=headers)
     return response.text, response.status_code
+
+@app.route('/admin/logout', methods=['GET'])
+def admin_logout():
+    # Hapus token dari session
+    session.pop('access_token', None)
+    return redirect(url_for('home'))  
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

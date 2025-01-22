@@ -1,0 +1,63 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Register | Breachint</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main>
+        <div id="login-form">
+            <h2>User Register</h2>
+            <form method="POST" action="{{ url_for('user_register') }}">
+                <input type="text" id="username" name="username" placeholder="Username" required>
+                <input type="email" id="email" name="email" required placeholder="Email">
+                <input type="password" id="password" name="password" required placeholder="Password">
+                <button type="submit">Register</button>
+            </form>            
+        </div>
+    </main>
+    <script>
+        document.querySelector("form").addEventListener("submit", function(event) {
+            event.preventDefault();  // Mencegah form submit default
+    
+            var email = document.querySelector('input[name="email"]').value;
+            var password = document.querySelector('input[name="password"]').value;
+            var username = document.querySelector('input[name="username"]').value;
+    
+            // Mengirimkan data ke server menggunakan fetch
+            fetch('/user/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Menampilkan alert jika registrasi berhasil
+                    alert('Register successfully');
+                    
+                    // Redirect ke halaman login setelah OK di-click
+                    window.location.href = '/user/login';
+                } else {
+                    // Menampilkan alert jika terjadi kesalahan
+                    alert('Register failed, please try again!');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat registrasi');
+            });
+        });
+    </script>
+    
+</body>
+</html>

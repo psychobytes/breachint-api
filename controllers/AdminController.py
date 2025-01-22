@@ -1,5 +1,5 @@
 import bcrypt
-from config import db
+from config import db, app
 from flask import jsonify, request
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
@@ -45,16 +45,31 @@ def login():
     access_token = create_access_token(identity=admin.username, additional_claims=additional_claims, expires_delta=timedelta(hours=1))
     return jsonify({'access_token': access_token})
 
+
 def add_admin():
-    new_admin_data = request.get_json()
-    hashed_pw = hash_password(new_admin_data['password'])
+    data = request.get_json()
+    admin_token = data.get('admin_token')
+
+    if not admin_token:
+        return jsonify({'message': 'Admin token is required in the payload'}), 400
+    if admin_token != app.config['ADMIN_TOKEN']:
+        return jsonify({'message': 'Unauthorized: Invalid admin token'}), 403
+    
+    username = data.get('username')
+    password = data.get('password')
+    hashed_pw = hash_password(password)
+
+    if Admin.query.filter_by(username=username).first():
+        return jsonify({'message': 'Admin username already exists'}), 400
     new_admin = Admin(
-        username = new_admin_data['username'],
-        password = hashed_pw
+        username=username,
+        password=hashed_pw
     )
     db.session.add(new_admin)
     db.session.commit()
+    
     return jsonify({'message': 'Admin added successfully!', 'admin': new_admin.to_dict()}), 201
+
 
 @admin_required
 def get_admins():

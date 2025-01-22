@@ -3,13 +3,12 @@ from routes.User_bp import user_bp
 from routes.Admin_bp import admin_bp
 from routes.Breachint_bp import breachint_bp
 from flask import request, jsonify
-from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
 
 # Untuk menangani dokumentasi API dengan Flask-RESTX
 from flask_restx import Api, Resource, fields
 from controllers.AdminController import admin_required, hash_password, check_password_hash
 from models.UserModel import User
-from flask_jwt_extended import create_access_token
 from datetime import timedelta
 
 # Inisialisasi Flask-JWT Manager
@@ -57,6 +56,7 @@ user_model = api.model('User', {
 admin_model = api.model('Admin', {
     'username': fields.String(required=True, description='The admin username'),
     'password': fields.String(required=True, description='The admin password'),
+    'admin_token': fields.String(required=True, description='The admin token'),
     'role': fields.String(required=False, description='The admin role (default: administrator)')
 })
 
@@ -217,7 +217,7 @@ class AdminLogin(Resource):
         access_token = create_access_token(identity=admin.username, expires_delta=timedelta(hours=1))
         return jsonify({'access_token': access_token}), 200
 
-# Registrasi admin baru
+# Registrasi Admin Baru
 @admin_ns.route('/register')
 class AdminRegister(Resource):
     @api.expect(admin_model)
@@ -226,20 +226,29 @@ class AdminRegister(Resource):
         Registrasi admin baru
         """
         data = request.get_json()
+        admin_token = data.get('admin_token')
+        
+        if not admin_token:
+            return jsonify({'message': 'Admin token is required in the payload'}), 400
+        if admin_token != app.config['ADMIN_TOKEN']:
+            return jsonify({'message': 'Unauthorized: Invalid admin token'}), 403
+
         username = data.get('username')
         password = data.get('password')
-        role = data.get('role', 'administrator')
 
         if Admin.query.filter_by(username=username).first():
             return jsonify({'message': 'Admin username already exists'}), 400
 
-        hashed_pw = hash_password(password)
-        new_admin = Admin(username=username, password=hashed_pw, role=role)
+        new_admin = Admin(
+            username=username,
+            password=hash_password(password),
+            role=data.get('role', 'administrator') 
+        )
         db.session.add(new_admin)
         db.session.commit()
-
         return jsonify({'message': 'Admin registered successfully!'}), 201
 
+    
 # Mendapatkan daftar admin
 @admin_ns.route('/view-admin')
 class ViewAdmins(Resource):

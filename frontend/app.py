@@ -5,6 +5,7 @@ import jsonify
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Ganti dengan kunci rahasia Anda
 
+#admin
 @app.route('/admin/login')
 def home():
     return render_template('login.html')
@@ -84,5 +85,56 @@ def admin_logout():
     session.pop('access_token', None)
     return redirect(url_for('home'))  
 
+#user
+#user menage
+@app.route('/user/login')
+def user_home():
+    return render_template('user-login.html')
+
+@app.route('/user/login', methods=['POST'])
+def user_login():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    response = requests.post('http://127.0.0.1:5000/user/login', json={
+        'email': email,
+        'password': password
+    })
+    if response.status_code == 200:
+        data = response.json()
+        access_token = data.get('access_token')
+        session['access_token'] = access_token
+        flash('Login successful! Token: ' + access_token)
+        return redirect(url_for('breachdata'))
+    else:
+        flash('Login failed: ' + response.json().get('message', 'Unknown error'))
+        return redirect(url_for('user_home'))
+
+@app.route('/user/register', methods=['GET', 'POST'])
+def user_register():
+    if request.method == 'POST':
+        data = request.get_json()
+        username = data.get('username')
+        email = data.get('email') 
+        password = data.get('password')
+        if not all([username, email, password]):
+            return jsonify({'message': 'Missing fields'}), 400
+        response = requests.post('http://127.0.0.1:5000/user/register', json=data)
+        return response.text, response.status_code
+    else:
+        return render_template('user-register.html')
+
+@app.route('/breachdata')
+def breachdata():
+    access_token = session.get('access_token')
+    if not access_token:
+        flash('You need to log in to access this page.')
+        return redirect(url_for('user_home'))
+    return render_template('index.html') 
+
+@app.route('/breachdata/logout', methods=['GET'])
+def user_logout():
+    session.pop('access_token', None)
+    return redirect(url_for('user_home')) 
+    
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

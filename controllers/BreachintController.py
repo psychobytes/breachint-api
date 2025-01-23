@@ -8,60 +8,62 @@ from config import collection2
 
 from flask import Flask, jsonify, request
 from flask_jwt_extended import jwt_required
-from controllers.LogController import log_search, get_logs  # Import fungsi dari LogController
-
+from controllers.LogController import log_request, log_search, get_logs
 from config import db 
 
 app = Flask(__name__)
+ 
 
 # @jwt_required()
 def search():
     data = request.get_json()
     searchquery = data.get('searchquery')
 
-    # Mencatat log setiap kali ada pencarian
+    # Ambil informasi dari permintaan
+    user_agent = request.headers.get('User-Agent', 'Unknown User-Agent') 
+    ip_address = request.remote_addr
+    method = request.method
+    endpoint = request.path
+
+    # Log permintaan
+    log_request(method, endpoint, ip_address, user_agent) 
     log_search(searchquery)  
     
-    # dukcapilresult = dukcapil(searchquery)
     dukcapilresult = dukcapil(searchquery)
     mypertaminaresult = mypertamina(searchquery)
 
-    return jsonify({'result': dukcapilresult,
-                    'result2': mypertaminaresult})
+    response_status = 200 
 
+    return jsonify({'result': dukcapilresult,
+                    'result2': mypertaminaresult}), response_status
 def dukcapil(search_string):
-    # Menggunakan pencarian teks
     query = {
         "$text": {
             "$search": f'"{search_string}"'
         }
     }
-    results = collection.find(query)  # Mengambil dokumen yang sesuai
+    results = collection.find(query) 
 
     output = []
     for result in results:
-        # Mengonversi ObjectId ke string sebelum mengembalikannya
-        result['_id'] = str(result['_id'])  # Pastikan _id dikonversi ke string
-        output.append(result)
-        
+        result['_id'] = str(result['_id']) 
+        output.append(result)      
     if not output:
         return "Data tidak ditemukan."
 
     return output
 
 def mypertamina(search_string):
-    # Menggunakan pencarian teks
     query = {
         "$text": {
             "$search": f'"{search_string}"'
         }
     }
-    results = collection2.find(query)  # Mengambil dokumen yang sesuai
+    results = collection2.find(query)  
 
     output = []
     for result in results:
-        # Mengonversi ObjectId ke string sebelum mengembalikannya
-        result['_id'] = str(result['_id'])  # Pastikan _id dikonversi ke string
+        result['_id'] = str(result['_id'])  
         output.append(result)
     
     if not output:
@@ -71,11 +73,30 @@ def mypertamina(search_string):
 
 # Route untuk menampilkan log pencarian
 @app.route('/logs', methods=['GET'])
-@jwt_required()  # Hanya bisa diakses oleh user yang terautentikasi
+@jwt_required()  
 def get_log_entries():
-    logs = get_logs()  # Memanggil fungsi get_logs dari LogController
+    logs = get_logs()  
 
     return jsonify({'logs': logs})
 
+# Menambahkan error handler global di aplikasi Flask
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f"An error occurred: {str(e)}")
+    return jsonify({"message": "An internal error occurred. Please try again later."}), 500
+
+@app.errorhandler(OSError)
+def handle_os_error(e):
+    app.logger.error(f"OS error occurred: {str(e)}")
+    return jsonify({"message": "An operating system error occurred. Please check your configuration."}), 500
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    try:
+        app.run(debug=True)
+    except OSError as e:
+        if e.errno == 10038:
+            print("Error: An operation was attempted on something that is not a socket.")
+        else:
+            print(f"An unexpected OS error occurred: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")

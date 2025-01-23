@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import requests
 import jsonify
+import json
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Ganti dengan kunci rahasia Anda
@@ -123,18 +124,41 @@ def user_register():
     else:
         return render_template('user-register.html')
 
-@app.route('/breachdata')
+@app.route('/')
 def breachdata():
     access_token = session.get('access_token')
     if not access_token:
         flash('You need to log in to access this page.')
         return redirect(url_for('user_home'))
-    return render_template('index.html') 
+    return render_template('index.html')
 
-@app.route('/breachdata/logout', methods=['GET'])
+@app.route('/', methods=['POST'])
+def search():
+    access_token = session.get('access_token')
+    if not access_token:
+        return redirect(url_for('/user/login'))
+
+    searchquery = request.form.get('searchquery')
+
+    # send request to search
+    response = requests.post('http://127.0.0.1:5000/api/search', json={
+        'searchquery': searchquery
+    })
+
+    result = response.text
+
+    results = json.loads(result)
+
+    result = results.get('result')
+    result2 = results.get('result2')
+
+    return render_template('index.html', result = result, result2 = result2)
+
+
+@app.route('/logout', methods=['GET'])
 def user_logout():
     session.pop('access_token', None)
-    return redirect(url_for('user_home')) 
-    
+    return redirect(url_for('user_home'))
+
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

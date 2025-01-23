@@ -1,5 +1,88 @@
-<h1>Breachint API</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Breachint</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main>
+        <div class="container">
+            <div>
+                <h2>BreachInt</h2>
+                <p>Intelligence gathering through databreach.</p>
+            </div>
+            <div>
+                <form action="/" method="POST">
+                    <input type="text" id="searchquery" name="searchquery" placeholder="Search anything (name, username, email, phone number, ssn, etc.)" required>
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+            <div>
+                {{ result }}
+            </div>
+            <div>
+                {{ result2 }}
+            </div>
 
-<a href="/breachdata/logout">
-    <button id="logoutButton">Logout</button>
-</a>
+            {% if result %}
+
+            <div class="table-container">
+
+                <table class="table table-bordered">
+
+                    <thead>
+
+                        <tr>
+
+                            {% for key in result[0].keys() %}
+
+                                <th>{{ key }}</th>
+
+                            {% endfor %}
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in result %}
+
+                            <tr>
+
+                                {% for value in item.values() %}
+
+                                    <td>{{ value }}</td>
+
+                                {% endfor %}
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <p>Tidak ada hasil yang ditemukan.</p>
+
+        {% endif %}
+            
+            <a href="/logout">
+                <button id="logoutButton">Logout</button>
+            </a>
+
+        </div>
+    </main>
+
+</body>
+</html>

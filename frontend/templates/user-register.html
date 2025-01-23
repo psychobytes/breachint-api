@@ -3,15 +3,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Register | Breachint</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='user.css') }}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    
 </head>
 <body>
     <main>
         <div id="login-form">
-            <h2>User Register</h2>
+            <h2><mark>BreachInt.</mark> Register</h2>
             <form method="POST" action="{{ url_for('user_register') }}">
                 <input type="text" id="username" name="username" placeholder="Username" required>
                 <input type="email" id="email" name="email" required placeholder="Email">

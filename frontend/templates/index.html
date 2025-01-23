@@ -3,85 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | Breachint</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}"/>
+    <title>Search | Breachint</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <header class="nav-container">
+        <div class="navbar">
+            <div class="nav-logo">
+                <p>BreachInt</p>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Request Data Removal</a></li>
+                    <li><a href="/logout">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
     <main>
         <div class="container">
-            <div>
-                <h2>BreachInt</h2>
-                <p>Intelligence gathering through databreach.</p>
+            <div class="head">
+                <img src="{{ url_for('static', filename='breachint-logo.jpg') }}">
+                <p>Intelligence gathering through <mark>databreach</mark>.</p>
             </div>
             <div>
-                <form action="/" method="POST">
-                    <input type="text" id="searchquery" name="searchquery" placeholder="Search anything (name, username, email, phone number, ssn, etc.)" required>
+                <form action="/" method="POST" id="searchForm">
+                    <input type="text" id="searchquery" name="searchquery" placeholder="Search anything (name, username, password, email, phone number, ssn, etc.)" required>
                     <button type="submit">Search</button>
                 </form>
             </div>
-            <div>
-                {{ result }}
-            </div>
-            <div>
-                {{ result2 }}
-            </div>
-
-            {% if result %}
-
-            <div class="table-container">
-
-                <table class="table table-bordered">
-
-                    <thead>
-
-                        <tr>
-
-                            {% for key in result[0].keys() %}
-
-                                <th>{{ key }}</th>
-
-                            {% endfor %}
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {% for item in result %}
-
-                            <tr>
-
-                                {% for value in item.values() %}
-
-                                    <td>{{ value }}</td>
-
-                                {% endfor %}
-
-                            </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        {% else %}
-
-            <p>Tidak ada hasil yang ditemukan.</p>
-
-        {% endif %}
-            
-            <a href="/logout">
-                <button id="logoutButton">Logout</button>
-            </a>
-
         </div>
+
+        <!-- honestly, I dont know wtf is going on here. if it works, dont touch it :3 -->
+                {% if result %}
+        <div class="res-container">
+            <div class="res">
+                    {% for key, value in result.items() %}
+                        <h3 id="complete"><mark>Source : {{ key }}</mark></h3>
+                        {% if value %}
+                            {% for item in value %}
+                                <table>
+                                    {% if item is string %}
+                                        <tr>
+                                            <td>Error</td>
+                                            <td>{{ item }}</td>
+                                        </tr>
+                                    {% else %}
+                                        {% for x, y in item.items() %}
+                                        <tr>
+                                            <td>{{ x }}</td>
+                                            <td id="val">{{ y }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                </table>
+                                <br>
+                            {% endfor %}
+                        {% else %}
+                            <p>No data available for {{ key }}.</p>
+                        {% endif %}
+                    {% endfor %}
+                    <h2>More data coming soon...</h2>
+                    <p>Work in progress.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        
+
+        <div id="loadingModal" class="modal">
+            <div class="modal-content">
+                <p>Loading, please wait...</p>
+                <div class="loader"></div>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('searchForm').addEventListener('submit', function(event) {
+                // Tampilkan modal loading
+                document.getElementById('loadingModal').style.display = 'flex';
+            });
+
+            // Fungsi untuk menutup modal loading
+            function closeLoadingModal() {
+                document.getElementById('loadingModal').style.display = 'none';
+            }
+
+            // Memantau elemen dengan ID 'complete'
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.target.style.display !== 'none') {
+                        closeLoadingModal();
+                    }
+                });
+            });
+
+            // Mulai mengamati elemen dengan ID 'complete'
+            const completeElement = document.getElementById('complete');
+            observer.observe(completeElement, { attributes: true });
+        </script>
+        
     </main>
 
 </body>

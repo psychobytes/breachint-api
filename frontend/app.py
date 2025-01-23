@@ -141,19 +141,22 @@ def search():
     searchquery = request.form.get('searchquery')
 
     # send request to search
+    headers = {'Authorization': f"Bearer {session['access_token']}"}
     response = requests.post('http://127.0.0.1:5000/api/search', json={
-        'searchquery': searchquery
-    })
+        'searchquery': searchquery}, headers=headers)
 
-    result = response.text
+    results = response.text
 
-    results = json.loads(result)
+    result = json.loads(results)
 
-    result = results.get('result')
-    result2 = results.get('result2')
+    # print(result)
 
-    return render_template('index.html', result = result, result2 = result2)
+    # result = results.get('dukcapil')
+    # result2 = results.get('mypertamina')
 
+    # return render_template('index.html', result = result, result2 = result2)
+
+    return render_template('index.html', result = result)
 
 @app.route('/logout', methods=['GET'])
 def user_logout():

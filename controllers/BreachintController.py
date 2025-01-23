@@ -5,16 +5,12 @@ from config import db_mongo
 from config import collection
 from config import collection2
 
-
-from flask import Flask, jsonify, request
-from flask_jwt_extended import jwt_required
 from controllers.LogController import log_request, log_search, get_logs
-from config import db 
+from flask import Flask
 
 app = Flask(__name__)
- 
 
-# @jwt_required()
+@jwt_required()
 def search():
     data = request.get_json()
     searchquery = data.get('searchquery')
@@ -33,9 +29,12 @@ def search():
     mypertaminaresult = mypertamina(searchquery)
 
     response_status = 200 
+    # return jsonify({'dukcapil': dukcapilresult,
+    #                 'mypertamina': mypertaminaresult})
+    return jsonify({'dukcapil': dukcapilresult,
+                    'mypertamina': mypertaminaresult}), response_status
 
-    return jsonify({'result': dukcapilresult,
-                    'result2': mypertaminaresult}), response_status
+
 def dukcapil(search_string):
     query = {
         "$text": {
@@ -49,7 +48,8 @@ def dukcapil(search_string):
         result['_id'] = str(result['_id']) 
         output.append(result)      
     if not output:
-        return "Data tidak ditemukan."
+        res = {"Error":"Data tidak ditemukan."}
+        output.append(res)
 
     return output
 
@@ -67,12 +67,12 @@ def mypertamina(search_string):
         output.append(result)
     
     if not output:
-        return "Data tidak ditemukan."
+        res = {"Error":"Data tidak ditemukan."}
+        output.append(res)
 
     return output
 
 # Route untuk menampilkan log pencarian
-@app.route('/logs', methods=['GET'])
 @jwt_required()  
 def get_log_entries():
     logs = get_logs()  

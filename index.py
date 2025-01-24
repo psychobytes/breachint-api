@@ -6,8 +6,9 @@ from flask import request, jsonify
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
 
 # Untuk menangani dokumentasi API dengan Flask-RESTX
-from flask_restx import Api, Resource, fields
+from flask_restx import Api, Resource, fields, reqparse
 from controllers.AdminController import admin_required, hash_password, check_password_hash
+from controllers.BreachintController import dukcapil, mypertamina
 from models.UserModel import User
 from datetime import timedelta
 
@@ -267,9 +268,38 @@ class ViewAdmins(Resource):
             'message': 'Admins retrieved successfully'
         }), 200
 
+
+# Parser untuk input
+parser = reqparse.RequestParser()
+parser.add_argument('search_string', type=str, required=True, help='String to search for')
+
+#Seacrh Data
+@user_ns.route('/api/search')
+class Search(Resource):
+    @api.doc(parser=parser)
+    @api.doc(params=auth_header())
+    def get(self):
+        """
+        Search Data 
+        """
+        args = parser.parse_args()
+        search_string = args['search_string']
+
+        # Fetch data from both sources
+        dukcapil_results = dukcapil(search_string)  
+        mypertamina_results = mypertamina(search_string)
+
+        combined_results = {
+            "dukcapil": dukcapil_results,
+            "mypertamina": mypertamina_results
+        }
+
+        return combined_results
+    
 # Menambahkan namespace ke API
 api.add_namespace(user_ns)
 api.add_namespace(admin_ns)
+
 
 if __name__ == '__main__':
     db.create_all() 

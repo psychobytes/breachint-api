@@ -29,8 +29,7 @@ def search():
     mypertaminaresult = mypertamina(searchquery)
 
     response_status = 200 
-    # return jsonify({'dukcapil': dukcapilresult,
-    #                 'mypertamina': mypertaminaresult})
+
     return jsonify({'dukcapil': dukcapilresult,
                     'mypertamina': mypertaminaresult}), response_status
 
@@ -52,6 +51,7 @@ def dukcapil(search_string):
         output.append(res)
 
     return output
+
 
 def mypertamina(search_string):
     query = {
